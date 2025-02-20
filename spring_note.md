@@ -2,30 +2,6 @@
 
 ***
 
-## Introduction
-
-* Spring is a popular framework for building Java applications
-* The problem is that building a traditional Spring application is really hard
-  * Which JAR dependencies do I need?
-  * How do I set up configuration (xml or Java)?
-  * How do I install the server (Tomcat, JBoss, etc.)?
-  * Etc.
-* Spring Boot solution
-  * Build on top of Spring
-  * Minimises the configuration required for setting up Spring projects
-  * Microservice based framework
-  * Provide an embedded HTTP server
-  * Can be run standalone
-* Spring project
-  * Additional Spring modules built on top of the core Spring framework
-  * Only use what you need
-  * Spring Cloud, Spring Data
-  * Spring Batch, Spring Security
-  * Spring Web Services, Spring LDAP
-  * Etc.
-
-***
-
 ## Maven
 
 * Project management tool
@@ -36,7 +12,7 @@
 
   1. Read config file
 
-  2. Check local repo 
+  2. Check local repo `.m2`
 
   3. Get from remote repo
 
@@ -47,7 +23,7 @@
   * `mvnw`
     * Allows you to run a Maven project
     * No need to have Maven installed or present on your path
-    * If correct version of Maven is not founf on the computer, it will automaticallt download it and run it
+    * If correct version of Maven is not found on the computer, it will automaticallt download it and run it
     * Two files are provided
       * `mvnw.cmd` for Windows
       * `mvnw.sh` for Unix-like
@@ -82,14 +58,33 @@
     * Uniquely identify a project
 
     * ```xml
-      <dependency>
-        <!--Name of company, group, or organisation-->
-        <groupId>org.hibernate.orm</groupId>
-        <!--Name of the project-->
-        <artifactId>hibernate-core</artifactId>		
-        <version>6.1.4.Final</version>	
-      </dependency>
+      <dependencies>
+        <dependency>
+            <!--Name of company, group, or organisation-->
+            <groupId>org.hibernate.orm</groupId>
+            <!--Name of the project-->
+            <artifactId>hibernate-core</artifactId>		
+            <version>6.1.4.Final</version>	
+          </dependency>
+        </dependencies>
       ```
+
+* Maven archetype
+  * Prototype `pom.xml`
+
+***
+
+## Spring
+
+* Write code as POJOs
+* Dependency Injection
+  * 
+
+
+
+
+
+
 
 ***
 
@@ -186,7 +181,73 @@
 
 ***
 
+## Spring Core
 
+### Spring Container
+
+* Primary functions
+
+  * Inversion of Control
+
+    * The approach of outsourcing the constructions and management of objects
+
+    * Object factory
+
+  * Dependency Injection
+
+    * The dependency inversion principle
+    * The client delegates to another object the responsibility of providing its dependencies
+    * Injection type
+      * Constructor injection
+        * Use this when you have required dependencies
+        * Generally recommended
+      * Setter injection
+        * Use this when you have optional dependencies
+        * If dependcy is not provided, your app can provide reasonable default logic
+    * Autowiring
+      * `@Autowired` tells Spring to inject a dependency
+
+* Constructor injection
+
+  * Steps
+    1. Define the dependency interface and class
+    2. Create REST controller
+    3. Create a constructor in your class for injections
+    4. Add `@GetMapping`
+  * `@Component`
+    * Marks the class as a Spring Bean
+    * A Spring Bean is a regular Java class that is managed by Spring
+    * Makes the bean available for dependency injection
+
+* Setter injection
+
+  * 
+
+* Component scanning
+
+  * By default, Spring starts component scanning from same package as your main Sping Boot application
+
+  * Also scans sub packages recursively
+
+  * How to scan other packages
+
+    * ```java
+      @SpringBootApplication(
+      	scanBasePackages = {"com.hadjshell.myapp",
+                           	"com.hadjshell.util",
+                           	"edu.newcastle.rs"})
+      public class MyApplication {}
+      ```
+
+  * 
+
+* Configuring container
+
+  * XML config file (legacy)
+  * Java annotations
+  * Java source code
+
+* 
 
 
 
