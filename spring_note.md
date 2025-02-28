@@ -74,17 +74,198 @@
 
 ***
 
-## Spring
+## Spring Core
 
-* Write code as POJOs
-* Dependency Injection
+* Spring vs. Spring Boot
+  * | Feature           | Spring Framework | Spring Boot |
+  |------------------|----------------|------------|
+  | **Definition** | A comprehensive framework for Java enterprise applications. | A framework built on top of Spring that simplifies application setup and development. |
+  | **Configuration** | Requires a lot of manual XML or Java-based configuration. | Comes with auto-configuration to reduce boilerplate code. |
+  | **Standalone Applications** | Needs an external server (e.g., Tomcat, Jetty) for deployment. | Embedded servers (Tomcat, Jetty, Undertow) allow applications to run standalone. |
+  | **Dependency Management** | Requires developers to manually manage dependencies. | Provides "starters" (e.g., `spring-boot-starter-web`) to simplify dependency management. |
+  | **Complexity** | More flexible but requires more setup and understanding of components. | Opinionated defaults make development faster and easier. |
+  | **Microservices** | Can be used for microservices but requires additional configuration. | Designed with microservices in mind, making development smoother. |
+  | **Production Readiness** | Requires additional setup for metrics, logging, and monitoring. | Includes built-in support for monitoring, metrics, and externalized configuration. |
+
+* Write code as POJOs (Plain Old Java Objects)
+
+### Spring Beans
+
+* A Spring Bean is simply a Java object created and managed by Spring IoC container
+
+* Why do we need Beans?
+
+  * Without Spring Beans, developers must manually create and manage objects, leading to tight coupling
+  * Spring Beans allow dependencies to be injected instead of instantiated inside a class, which enables loose coupling, easier unit testing, and better code reusability
+
+* How to create bean
+
+  * XML-based configuration
+
+    * ```xml
+      <!--/src/main/resources/spring.xml-->
+      <bean id="laptop" class="com.example.Laptop" scope="singleton"/>
+      ```
+
+    * ```java
+      ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+      Laptop l1 = (Laptop) context.getBean("laptop");
+      // or
+      Laptop l2 = context.getBean(Laptop.class);
+      ```
+      
+    * 
+
+  * Java-based configuration
+
+  * Component scanning
+
+    * Spring Boot style
+
+* Scope
+
+  * Singleton
+    * By default beans are singleton scope
+  * Prototype
+    * A new instance is created everytime it is requested
+  * Request 
+    * A new instance is created for each HTTP request (Web Applications)
+  * Session
+    * A new instance is created per HTTP session
+  * Application
+    * A single instance shared across the entire web application
+
+* Beans can be initialised lazily when they are created not at application startup but only when they are first needed
+
+  * XML-based Config
+
+    * ```xml
+      <bean id="laptop" class="com.example.Laptop" lazy-init="true"/>
+      ```
+
+  * Java-based Config
+
+  * Spring Boot style
+
+  * When to use lazy initialisation
+
+    * The bean is **rarely used**
+    * The bean is **resource-heavy** (e.g., database connections, third-party APIs)
+    * You want **faster application startup**
+
+
+### Inversion of Control
+
+* Focusing on business logic instead of managing objects (creating, maintaining, destroying) as a programmer
+* Spring IoC container takes care of it
+* It is a Spring principle
+
+### Dependency Injection
+
+* In order to achieve IoC we use this design pattern DI
+
+#### Construction Injection
+
+* It is the recommended approach for injecting **mandatory dependencies** because it ensures that an object is always created with its required dependencies
+
+* Steps
+
+  1. Spring creates an instance of the dependent class
+  2. It injects dependencies via the constructor
+  3. The bean is then ready for use
+
+* XML-based Config
+
+  * ```xml
+    <bean id="laptop" class="com.example.Laptop">
+      <!--Must follow the sequence in the parameter list of the constructor-->
+      <!--primitive fields-->
+    	<constructor-arg name="price" value="100"/>
+      <!--references-->
+      <constructor-arg name="compiler" ref="compiler"/>
+      
+      <!--Or use index-->
+      <constructor-arg index="1" ref="compiler"/>
+      <constructor-arg index="0" value="100"/>
+    </bean>
+    
+    <bean id="compiler" class="com.example.Compiler"/>
+    ```
+
   * 
 
+* Java-based Config
 
+* Spring Boot Style
 
+* 
 
+#### Setter Injection
 
+* It allows Spring to inject beans after object creation
+* Steps
 
+  1. Spring creates an instance of the dependent class
+  2. It injectsdependencies using setter methods
+  3. The bean is then ready for use
+* XML-based Config
+	* ```xml
+    <bean id="lap" class="com.example.Laptop">
+      <!--primitive fields-->
+    	<property name="price" value="100"/>
+      <!--references-->
+      <property name="compiler" ref="comp"/>
+    </bean>
+    
+    <bean id="comp" class="com.example.Compiler"/>
+* Java-based Config
+* Spring Boot style
+
+* | **Use Setter Injection When...**                             | **Use Constructor Injection When...**                        |
+  | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | Dependency is **optional** (not always needed).              | Dependency is **mandatory** for the object to function.      |
+  | You want to allow **modification after object creation**.    | You want to ensure **immutability** (no changes after construction). |
+  | The class has **many dependencies**, making constructor injection harder to manage. | The class has **few dependencies**, making constructor injection clearer. |
+
+#### Autowiring
+
+* Autowiring is a mechanism that automatically injects dependencies into Spring Beans, reducing the need for manual bean wiring in configuration files
+
+* XML-based Config
+
+  * ```java
+    class Student {
+      private Computer computer;
+    }
+    
+    interface Computer {}
+    class Laptop implements Computer {}
+    class Desktop implements Computer {}
+    ```
+
+  * ```xml
+    <!--Autowiring by name-->
+    <!--Works when the bean name matches the field name-->
+    <bean id="computer" class="com.example.Laptop"/>
+    <bean id="Student" class="com.example.Student" autowire="byName"/>
+    <!--The field must be named computer in Student-->
+    ```
+
+  * ```xml
+    <!--Autowiring by type-->
+    <!--Injects a bean if only one bean of that type exists-->
+    <!--Set a primary bean when there is a conflict-->
+    <bean id="laptop" class="com.example.Laptop" primary="true"/>
+    <bean id="desktop" class="com.example.Desktop"/>
+    <bean id="Student" class="com.example.Student" autowire="byType"/>
+    <!--The field must be named computer in Student-->
+    ```
+
+  * 
+
+* Java-based Config
+
+* Spring Boot Style
 
 ***
 
@@ -178,76 +359,6 @@
 
   * `mvn package`
   * `java -jar myapp.jar` or `mvn spring-boot:run`
-
-***
-
-## Spring Core
-
-### Spring Container
-
-* Primary functions
-
-  * Inversion of Control
-
-    * The approach of outsourcing the constructions and management of objects
-
-    * Object factory
-
-  * Dependency Injection
-
-    * The dependency inversion principle
-    * The client delegates to another object the responsibility of providing its dependencies
-    * Injection type
-      * Constructor injection
-        * Use this when you have required dependencies
-        * Generally recommended
-      * Setter injection
-        * Use this when you have optional dependencies
-        * If dependcy is not provided, your app can provide reasonable default logic
-    * Autowiring
-      * `@Autowired` tells Spring to inject a dependency
-
-* Constructor injection
-
-  * Steps
-    1. Define the dependency interface and class
-    2. Create REST controller
-    3. Create a constructor in your class for injections
-    4. Add `@GetMapping`
-  * `@Component`
-    * Marks the class as a Spring Bean
-    * A Spring Bean is a regular Java class that is managed by Spring
-    * Makes the bean available for dependency injection
-
-* Setter injection
-
-  * 
-
-* Component scanning
-
-  * By default, Spring starts component scanning from same package as your main Sping Boot application
-
-  * Also scans sub packages recursively
-
-  * How to scan other packages
-
-    * ```java
-      @SpringBootApplication(
-      	scanBasePackages = {"com.hadjshell.myapp",
-                           	"com.hadjshell.util",
-                           	"edu.newcastle.rs"})
-      public class MyApplication {}
-      ```
-
-  * 
-
-* Configuring container
-
-  * XML config file (legacy)
-  * Java annotations
-  * Java source code
-
-* 
 
 
 
