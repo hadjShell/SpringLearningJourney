@@ -108,15 +108,36 @@
       ```
 
     * ```java
+      // src/main/java/com.example/App.java
       ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
       Laptop l1 = (Laptop) context.getBean("laptop");
       // or
       Laptop l2 = context.getBean(Laptop.class);
       ```
-      
-    * 
 
   * Java-based configuration
+
+    * ```java
+      // src/main/java/com.example/config/AppConfig.java
+      
+      @Configuration
+      public class AppConfig {
+        
+        // the name of the bean is the method name by default
+        @Bean(name={"machine1", "beast"})
+        @Scope("prototype")
+        public Laptop laptop() {
+          return new Laptop();
+        }
+      }
+      ```
+
+    * ```java
+      // src/main/java/com.example/App.java
+      ApplicationContext context = 
+        new AnnotationConfigApplicationContext(AppConfig.class);
+      Laptop l = context.getBean(Laptop.class);
+      ```
 
   * Component scanning
 
@@ -145,10 +166,22 @@
 
   * Java-based Config
 
+    * ```java
+      @Configuration
+      public class AppConfig {
+        
+        @Bean
+        @Lazy
+        public Laptop laptop() {
+          return new Laptop();
+        }
+      }
+      ```
+  
   * Spring Boot style
-
+  
   * When to use lazy initialisation
-
+  
     * The bean is **rarely used**
     * The bean is **resource-heavy** (e.g., database connections, third-party APIs)
     * You want **faster application startup**
@@ -192,33 +225,67 @@
     <bean id="compiler" class="com.example.Compiler"/>
     ```
 
-  * 
-
 * Java-based Config
 
-* Spring Boot Style
+  * ```java
+    @Configuration
+    public class AppConfig {
+      
+      @Bean
+      public Compiler compiler() {
+        return new Compiler();
+      }
+      
+      @Bean
+      public Laptop laptop(Compiler compiler) {
+        return new Laptop(compiler);
+      }
+    }
+    ```
 
-* 
+* Spring Boot Style
 
 #### Setter Injection
 
 * It allows Spring to inject beans after object creation
+
 * Steps
 
   1. Spring creates an instance of the dependent class
-  2. It injectsdependencies using setter methods
+  2. It injects dependencies using setter methods
   3. The bean is then ready for use
+
 * XML-based Config
-	* ```xml
-    <bean id="lap" class="com.example.Laptop">
+  * ```xml
+    <bean id="laptop" class="com.example.Laptop">
       <!--primitive fields-->
     	<property name="price" value="100"/>
       <!--references-->
-      <property name="compiler" ref="comp"/>
+      <property name="compiler" ref="compiler"/>
     </bean>
     
-    <bean id="comp" class="com.example.Compiler"/>
+    <bean id="compiler" class="com.example.Compiler"/>
+
 * Java-based Config
+
+  * ```java
+    @Configuration
+    public class AppConfig {
+      
+      @Bean
+      public Compiler compiler() {
+        return new Compiler();
+      }
+      
+      @Bean
+      public Laptop laptop(Compiler compiler) {
+        Laptop l = new Laptop();
+        l.setCompiler(compiler);
+        return l;
+      }
+    }
+    ```
+
 * Spring Boot style
 
 * | **Use Setter Injection When...**                             | **Use Constructor Injection When...**                        |
@@ -261,9 +328,29 @@
     <!--The field must be named computer in Student-->
     ```
 
-  * 
-
 * Java-based Config
+
+  * ```java
+    @Configuration
+    public class AppConfig {
+      
+      @Bean
+      @Primary
+      public Laptop laptop() {
+        return new Laptop();
+      }
+      
+      @Bean 
+      public Desktop desktop() {
+        return new Desktop();
+      }
+      
+      @Bean
+      public Student student(@Qualifier("desktop") Computer computer) {
+        return new Student(computer);
+      }
+    }
+    ```
 
 * Spring Boot Style
 
