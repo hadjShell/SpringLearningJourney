@@ -545,102 +545,109 @@
 
 ***
 
+## Spring Boot Web
 
+### Servlet (Old way)
 
+* A Servlet is a Java-based server-side class used to handle requests and generate dynamic responses for web applications
 
+* The servlet must be run on the servlet container (e.g., Apache Tomcat) instead of directly on JVM
 
+* External or embedded server
 
+* Servlet lifecycle
 
-## Spring Boot
+  * Loading and initialisation
+    * When a servlet is requested for the first time or after a container restart, the servlet container loads the servlet class into memory
+    * The container calls the `init()` method, which is used to initialize the servlet
+    * `init()` is called only once during the servlet’s lifecycle and is used to perform any initializations required for the servle
+  * Request handling
+    * `service()` method is called for each request made to the servlet
+    * It is responsible for processing the client request and generating the response
+    * The container calls `service()` whenever it receives an HTTP request (usually via `doGet()`, `doPost()`, etc.)
+    * In the case of `HttpServlet`, the `service()` method delegates the request to specific methods based on the HTTP method (GET, POST, etc.):
+      - **`doGet()`**: Handles HTTP GET requests (commonly used for retrieving data from the server).
+      - **`doPost()`**: Handles HTTP POST requests (commonly used for submitting data to the server).
+      - **`doPut()`, `doDelete()`**: Handle PUT and DELETE requests, respectively.
+      - **`doHead()`, `doOptions()`**: Handle other HTTP request types like HEAD and OPTIONS.
+  * Destroying the servlet
+    * When the servlet container decides to unload the servlet (typically when the server shuts down or the servlet is no longer needed), it calls the `destroy()` method
+    * his is where cleanup tasks such as releasing resources (like database connections or file handles) should be done
 
-* Spring Initialzr
+* How to create a servlet?
 
-  * `https://start.spring.io/`
+  1. Extend `HttpServlet`
+  2. Override `doGet()`, `doPOst()`, etc.
+  3. Configure using `web.xml` or `WebServlet` annotation
 
-  * Spring Boot Starter
-
-    * A collection of dependencies with compatible versions to boot up the project
-
-    * `spring-boot-starter-xyz`
-
-    * `spring-boot-starter-parent`
-
-      * Default Maven config
-
-        * Java version, UTF-coding, etc.
-
-        * Override a default
-
-          * ```xml
-            <properties>
-              <java.version>17</java.version>
-            </properties>
-            ```
-
-      * Use version on parent only, children will inherit it
-
-      * Default plugin config
-
-* Application properties
-
-  * `src/resources/application.properties`
-
-  * Config the application
-
-    * ```properties
-      server.port=8484
-      logging.file.name=mylog.log
+* ```java
+  import java.io.IOException;
+  import javax.servlet.ServletException;
+  import javax.servlet.annotation.WebServlet;
+  import javax.servlet.http.HttpServlet;
+  import javax.servlet.http.HttpServletRequest;
+  import javax.servlet.http.HttpServletResponse;
+  
+  // Annotation-based servlet mapping
+  @WebServlet("/hello")
+  public class HelloServlet extends HttpServlet {
       
-      ## customer
-      author.name=David
-      ```
+      @Override
+      public void init() throws ServletException {
+          System.out.println("Servlet Initialized");
+      }
+    
+    	@Override
+      protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+              throws ServletException, IOException {
+          response.setContentType("text/html");
+          response.getWriter().println("<h1>Hello, Servlet!</h1>");
+      }
+    
+    	@Override
+    	protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+        			throws ServletException, IOException {
+          // Handle POST request
+          String data = request.getParameter("data");
+          response.getWriter().write("Received POST data: " + data);
+  		}
+    
+    	@Override
+      public void destroy() {
+          System.out.println("Servlet Destroyed");
+      }
+  }
+  ```
 
-  * Access the properties in Java files
+### Spring MVC with Spring Boot
 
-    * ```java
-      @Value("${author.name}")
-      private String authorName;
-      ```
+* MVC (Model-View-Controller)
+  * **Controller**
+    * Maps HTTP requests to specific handler methods
+    * Validates input data (optional, but often delegated to validation mechanisms)
+    * Calls the service layer for business logic execution
+    * Returns responses (JSON, XML, View)
+    * Servlet, Spring MVC Controller
+  * **Model**
+    * **`@Service`**
+      * Implements business logic
+      * Calls data access layer (repository/DAO)
+      * Ensures transaction management (e.g., `@Transactional`)
+      * Provides reusable methods for controllers
+    * **`@Component`**
+      * Representing and managing application data
+    * **`@Repository`**
+      * Interacting with the database
+      * Spring JDBC, Hibernate, Spring Data JPA, etc.
+  * **View**
+    * Displays data received from the Controller
+    * UI presentation
+    * JSP, Thymeleaf, React, Angular, etc.
+* 
 
-* By default, Spring Boot will load static resources from `resources/static` directory
+### Spring MVC without Spring Boot
 
-* By default, Spring Boot will load templates from `resources/templates` directory
 
-* Spring Boot Dev Tools
-
-  * `spring-boot-devtools`
-  * Automatically restarts your application when your code is updated
-
-* Spring Boot Actuator
-
-  * Expose endpoints to monitor and manage your application
-
-  * `spring-boot-starter-actuator`
-
-  * `/health`
-
-    * Checks the status of your application
-
-  * `info`
-
-    * Provides information about your application
-
-    * To expose it, add properties
-
-    * ```properties
-      management.endpoints.web.exposure.include=health,info
-      management.info.env.enabled=true
-      
-      info.app.name=My Cool App
-      info.app.version=1.0.0
-      ```
-
-    * Anything start with `info` will be added to the endpoint
-
-* Running a Spring application on CLI
-
-  * `mvn package`
-  * `java -jar myapp.jar` or `mvn spring-boot:run`
 
 
 
