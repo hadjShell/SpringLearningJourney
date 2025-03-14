@@ -141,7 +141,34 @@
 
   * Component scanning
 
-    * Spring Boot style
+    * Stereotype annotations
+
+      * | Annotation        | Description                                                  |
+        | ----------------- | ------------------------------------------------------------ |
+        | `@Component`      | Generic stereotype for any Spring-managed bean.              |
+        | `@Service`        | Specialized for **service layer** components (business logic). |
+        | `@Repository`     | Specialized for **DAO (Data Access Object) layer** (database interactions). |
+        | `@Controller`     | Specialized for **web controllers** in Spring MVC.           |
+        | `@RestController` | Combines `@Controller` and `@ResponseBody` for REST APIs.    |
+
+    * ```java
+      @Component
+      @Scope("prototype")
+      public class Laptop {}
+      ```
+
+    * ```java
+      @SpringBootApplication 	// Include @ComponentScan by default
+      public class SpringBootDemoApplication {
+        public static void main(String[] args) {
+          ApplicationContext context = 
+            SpringApplication.run(SpringBootDemoApplication.class, args);
+          Laptop l = context.getBean(Laptop.class);
+        }
+      }
+      ```
+
+    * Spring automatically **scans packages** for stereotype annotations using `@ComponentScan`
 
 * Scope
 
@@ -177,8 +204,6 @@
         }
       }
       ```
-  
-  * Spring Boot style
   
   * When to use lazy initialisation
   
@@ -243,7 +268,6 @@
     }
     ```
 
-* Spring Boot Style
 
 #### Setter Injection
 
@@ -286,13 +310,15 @@
     }
     ```
 
-* Spring Boot style
-
 * | **Use Setter Injection When...**                             | **Use Constructor Injection When...**                        |
   | ------------------------------------------------------------ | ------------------------------------------------------------ |
   | Dependency is **optional** (not always needed).              | Dependency is **mandatory** for the object to function.      |
   | You want to allow **modification after object creation**.    | You want to ensure **immutability** (no changes after construction). |
   | The class has **many dependencies**, making constructor injection harder to manage. | The class has **few dependencies**, making constructor injection clearer. |
+
+* **It is not recommended to use both Constructor Injection and Setter Injection for the same field in a Spring Bean**
+
+* if you define both Constructor Injection and Setter Injection for the same field, Spring will prioritize **Constructor Injection** if both are present
 
 #### Autowiring
 
@@ -354,7 +380,176 @@
 
 * Spring Boot Style
 
+  * ```java
+    @Component
+    public class Student {
+      // Field injection (least recommended)
+      @Autowired
+      private Card IdCard;
+      private final Computer computer;
+      private Bag bag;
+      
+      // Constructor injection
+      @Autowired
+      public Student(@Qualifier("laptop") Computer computer) {
+        this.computer = computer;
+      }
+      
+      // Setter injection
+      // If a dependency may not always be available, set required = false
+      // If no bean is found, Spring will not throw an error
+      @Autowired(required = false)
+      public void setBag(Bag bag) {
+        this.bag = bag;
+      }
+    }
+    ```
+
+
 ***
+
+## Spring JDBC
+
+* Spring JDBC is a lightweight module in the Spring Framework that simplifies database interaction using JDBC
+* For larger applications, Spring Data JPA (with Hibernate) might be preferable, but for simple use cases, Spring JDBC is lightweight and efficient
+
+### Key Components 
+
+* `DataSource`
+
+  * A `DataSource` object provides database connection pooling
+
+  * Instead of creating a new connection for every request, Spring uses a connection pool to reuse existing connections efficiently
+
+  * ```properties
+    # application.properties
+    spring.datasource.url=jdbc:mysql://localhost:3306/mydb
+    spring.datasource.username=root
+    spring.datasource.password=secret
+    spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+    spring.datasource.hikari.maximum-pool-size=10
+    ```
+
+  * ```java
+    // or programmatically using DataSource
+    @Bean
+    public DataSource getDataSource() {
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/mydb");
+        dataSource.setUsername("root");
+        dataSource.setPassword("secret");
+        return dataSource;
+    }
+    ```
+
+* `JdbcTemplate`
+
+  * `JdbcTemplate` is the core class in Spring JDBC that provides methods to execute SQL queries. It internally manages:
+    * Connection establish
+    * Statement preparation
+    * Query execution
+    * Exception handling
+    * Resource cleanup
+
+### CRUD Operations
+
+* Insert
+
+  * ```java
+    public void save(Employee e) {
+        String sql = "INSERT INTO employees (id, name, department) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, e.getId(), e.getName(), e.getDepartment());
+    }
+    ```
+
+* Select
+
+  * A `RowMapper` is used to map database rows to Java objects
+
+  * `RowMapper` is a functional interface with an abstract method `T mapRow(ResultSet rs, int rowNum)`
+
+  * ```java
+    public List<Student> findAll() {
+        String sql = "select * from student";
+        public class StudentRowMapper implements RowMapper<Student> {
+          @Override
+          public Student mapRow(ResultSet rs, int rowNum) throws SQLException {
+              Student student = new Student();
+              student.setRollNo(rs.getInt("rollno"));
+              student.setName(rs.getString("name"));
+              student.setMarks(rs.getInt("marks"));
+              return student;
+          }
+      	}
+    
+        return jdbc.query(sql, new StudentRowMapper());
+    }
+    ```
+
+    ```java
+    // lambda expression
+    public List<Student> findAll() {
+        String sql = "select * from student";
+        return jdbc.query(sql, (rs, rowNum) ->
+                new Student(rs.getInt("rollno"),
+                            rs.getString("name"),
+                            rs.getInt("marks"))
+        );
+    }
+    ```
+
+    ```java
+    // query for one object
+    public Student find(int no) {
+        String sql = "select * from student where rollno = ?";
+        return jdbc.queryForObject(sql, (rs, rowNum) ->
+                new Student(rs.getInt("rollno"),
+                        rs.getString("name"),
+                        rs.getInt("marks")),
+                no);
+    }
+    ```
+
+* Update
+
+  * ```java
+    public void update(int id, String name, String department) {
+        String sql = "UPDATE employees SET name = ?, department = ? WHERE id = ?";
+        jdbcTemplate.update(sql, name, department, id);
+    }
+    ```
+
+* Delete
+
+  * ```java
+    public void delete(int id) {
+        String sql = "DELETE FROM employees WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
+    ```
+
+### Transaction Management
+
+* `@Transactional`
+
+### Exception Handling
+
+* Spring JDBC translates `SQLExceptions` into **`DataAccessException`**, which is a runtime exception hierarchy
+
+* | Exception                                | Description                                           |
+  | ---------------------------------------- | ----------------------------------------------------- |
+  | `DataAccessException`                    | Root exception for Spring JDBC                        |
+  | `EmptyResultDataAccessException`         | Thrown when `queryForObject()` returns no result      |
+  | `IncorrectResultSizeDataAccessException` | Thrown when an unexpected number of rows are returned |
+
+***
+
+
+
+
+
+
 
 ## Spring Boot
 
