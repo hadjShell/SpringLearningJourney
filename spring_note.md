@@ -23,7 +23,7 @@
   * `mvnw`
     * Allows you to run a Maven project
     * No need to have Maven installed or present on your path
-    * If correct version of Maven is not found on the computer, it will automaticallt download it and run it
+    * If correct version of Maven is not found on the computer, it will automatically download it and run it
     * Two files are provided
       * `mvnw.cmd` for Windows
       * `mvnw.sh` for Unix-like
@@ -643,9 +643,45 @@
     * Displays data received from the Controller
     * UI presentation
     * JSP, Thymeleaf, React, Angular, etc.
-* 
 
-### Spring MVC without Spring Boot
+* Spring Boot MVC has an embedded Tomcat server
+
+* Work flow
+
+  * ```css
+    [Client] → [DispatcherServlet] → [Controller] → [Service] → [DAO] → [Database]
+                  ↓
+          [View Resolver] → [View]
+    ```
+
+* Annotations
+
+  * | Annotation                 | Description               |
+    | -------------------------- | ------------------------- |
+    | `@Controller`              | Defines a web controller. |
+    | `@RestController`          | Handles RESTful APIs.     |
+    | `@RequestMapping("/path")` | Maps request URLs.        |
+    | `@GetMapping("/path")`     | Maps GET requests.        |
+    | `@PostMapping("/path")`    | Maps POST requests.       |
+    | `@PutMapping("/path")`     | Maps PUT requests.        |
+    | `@DeleteMapping("/path")`  | Maps DELETE requests.     |
+    | `@RequestParam`            | Gets request parameters.  |
+    | `@PathVariable`            | Extracts values from URL. |
+    | `@ResponseBody`            | Sends data as JSON.       |
+
+* Controller for view (skipped)
+
+  * `ModelAndView` class
+  * JSP is a servlet in the end
+
+* RESTful controller
+
+  * 
+
+
+***
+
+## Spring Data JPA
 
 
 
