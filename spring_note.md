@@ -674,9 +674,63 @@
   * `ModelAndView` class
   * JSP is a servlet in the end
 
-* RESTful controller
 
-  * 
+### REST API
+
+* **RE**presentational **S**tate **T**ransfer
+
+* [REST API written by Postman](https://blog.postman.com/rest-api-examples/)
+
+* `jackson` library converts Java objects to JSON
+
+* ```java
+  @RestController
+  @RequestMapping("/posts")		// Base URL for all endpoints
+  @CrossOrigin(origins = "http://localhost:3000")
+  public class JobController {
+  
+      private JobService service;
+  
+      @Autowired
+      public JobController(JobService service) {
+          this.service = service;
+      }
+  
+      public JobController() {
+      }
+  
+      @GetMapping
+      public List<JobPost> getAllJobs() {
+          return service.getAllJobs();
+      }
+  
+      // You can specify which format you want to produce or consume
+      @GetMapping(path = "/{postId}", produces = {"application/json"})
+    	// If the path variable name is the same as the parameter name, you don't have to specify it
+      public JobPost getJobById(@PathVariable int postId) {
+          return service.getJobById(postId);
+      }
+  
+      @PostMapping(consumes = {"application/json"})
+      public JobPost addJob(@RequestBody JobPost job) {
+          service.addJob(job);
+          return job;
+      }
+  
+      @PutMapping("/{postId}")
+      public JobPost updateJob(@RequestBody JobPost job) {
+          service.updateJob(job);
+          return service.getJobById(job.getPostId());
+      }
+  
+      @DeleteMapping("/{postId}")
+      public void deleteJob(@PathVariable("postId") int jobId) {
+          service.deleteJob(jobId);
+      }
+  }
+  ```
+
+* 
 
 
 ***
