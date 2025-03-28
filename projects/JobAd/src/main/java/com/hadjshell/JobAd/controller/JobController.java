@@ -33,6 +33,11 @@ public class JobController {
         return service.getJobById(postId);
     }
 
+    @GetMapping(params = "keyword")
+    public List<JobPost> searchJob(@RequestParam(name = "keyword", defaultValue = "nothing") String keyword) {
+        return service.search(keyword);
+    }
+
     @PostMapping(consumes = {"application/json"})
     public JobPost addJob(@RequestBody JobPost job) {
         service.addJob(job);
@@ -45,8 +50,8 @@ public class JobController {
         return service.getJobById(job.getPostId());
     }
 
-    @DeleteMapping("/{postId}")
-    public void deleteJob(@PathVariable("postId") int jobId) {
+    @DeleteMapping
+    public void deleteJob(@RequestParam(name = "id", defaultValue = "1") int jobId) {
         service.deleteJob(jobId);
     }
 }

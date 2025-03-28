@@ -158,7 +158,7 @@
       ```
 
     * ```java
-      @SpringBootApplication 	// Include @ComponentScan by default
+      @SpringBootApplication
       public class SpringBootDemoApplication {
         public static void main(String[] args) {
           ApplicationContext context = 
@@ -169,6 +169,13 @@
       ```
 
     * Spring automatically **scans packages** for stereotype annotations using `@ComponentScan`
+    
+    * `@SpringBootApplication` is a convenience annotation that adds all of the following:
+    
+      - `@Configuration`: Tags the class as a source of bean definitions for the application context
+      - `@EnableAutoConfiguration`: Tells Spring Boot to start adding beans based on classpath settings, other beans, and various property settings. For example, if `spring-webmvc` is on the classpath, this annotation flags the application as a web application and activates key behaviors, such as setting up a `DispatcherServlet`
+      - `@ComponentScan`: Tells Spring to look for other components, configurations, and services in the `com/example` package, letting it find the controllers
+    
 
 * Scope
 
@@ -408,6 +415,206 @@
 
 ***
 
+## Spring Boot Web
+
+### Servlet (Old way)
+
+* A Servlet is a Java-based server-side class used to handle requests and generate dynamic responses for web applications
+
+* The servlet must be run on the servlet container (e.g., Apache Tomcat) instead of directly on JVM
+
+* External or embedded server
+
+* Servlet lifecycle
+
+  * Loading and initialisation
+    * When a servlet is requested for the first time or after a container restart, the servlet container loads the servlet class into memory
+    * The container calls the `init()` method, which is used to initialize the servlet
+    * `init()` is called only once during the servlet’s lifecycle and is used to perform any initializations required for the servle
+  * Request handling
+    * `service()` method is called for each request made to the servlet
+    * It is responsible for processing the client request and generating the response
+    * The container calls `service()` whenever it receives an HTTP request (usually via `doGet()`, `doPost()`, etc.)
+    * In the case of `HttpServlet`, the `service()` method delegates the request to specific methods based on the HTTP method (GET, POST, etc.):
+      - **`doGet()`**: Handles HTTP GET requests (commonly used for retrieving data from the server).
+      - **`doPost()`**: Handles HTTP POST requests (commonly used for submitting data to the server).
+      - **`doPut()`, `doDelete()`**: Handle PUT and DELETE requests, respectively.
+      - **`doHead()`, `doOptions()`**: Handle other HTTP request types like HEAD and OPTIONS.
+  * Destroying the servlet
+    * When the servlet container decides to unload the servlet (typically when the server shuts down or the servlet is no longer needed), it calls the `destroy()` method
+    * his is where cleanup tasks such as releasing resources (like database connections or file handles) should be done
+
+* How to create a servlet?
+
+  1. Extend `HttpServlet`
+  2. Override `doGet()`, `doPOst()`, etc.
+  3. Configure using `web.xml` or `WebServlet` annotation
+
+* ```java
+  import java.io.IOException;
+  import javax.servlet.ServletException;
+  import javax.servlet.annotation.WebServlet;
+  import javax.servlet.http.HttpServlet;
+  import javax.servlet.http.HttpServletRequest;
+  import javax.servlet.http.HttpServletResponse;
+  
+  // Annotation-based servlet mapping
+  @WebServlet("/hello")
+  public class HelloServlet extends HttpServlet {
+      
+      @Override
+      public void init() throws ServletException {
+          System.out.println("Servlet Initialized");
+      }
+    
+    	@Override
+      protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+              throws ServletException, IOException {
+          response.setContentType("text/html");
+          response.getWriter().println("<h1>Hello, Servlet!</h1>");
+      }
+    
+    	@Override
+    	protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+        			throws ServletException, IOException {
+          // Handle POST request
+          String data = request.getParameter("data");
+          response.getWriter().write("Received POST data: " + data);
+  		}
+    
+    	@Override
+      public void destroy() {
+          System.out.println("Servlet Destroyed");
+      }
+  }
+  ```
+
+### Spring MVC with Spring Boot
+
+* MVC (Model-View-Controller)
+  * **Controller**
+    * Maps HTTP requests to specific handler methods
+    * Validates input data (optional, but often delegated to validation mechanisms)
+    * Calls the service layer for business logic execution
+    * Returns responses (JSON, XML, View)
+    * Servlet, Spring MVC Controller
+  * **Model**
+    * **`@Service`**
+      * Implements business logic
+      * Calls data access layer (repository/DAO)
+      * Ensures transaction management (e.g., `@Transactional`)
+      * Provides reusable methods for controllers
+    * **`@Component`**
+      * Representing and managing application data
+    * **`@Repository`**
+      * Interacting with the database
+      * Spring JDBC, Hibernate, Spring Data JPA, etc.
+  * **View**
+    * Displays data received from the Controller
+    * UI presentation
+    * JSP, Thymeleaf, React, Angular, etc.
+
+* Spring Boot MVC has an embedded Tomcat server
+
+* Work flow
+
+  * ```css
+    [Client] → [DispatcherServlet] → [Controller] → [Service] → [DAO] → [Database]
+                  ↓
+          [View Resolver] → [View]
+    ```
+
+* Annotations
+
+  * | Annotation                 | Description               |
+    | -------------------------- | ------------------------- |
+    | `@Controller`              | Defines a web controller. |
+    | `@RestController`          | Handles RESTful APIs.     |
+    | `@RequestMapping("/path")` | Maps request URLs.        |
+    | `@GetMapping("/path")`     | Maps GET requests.        |
+    | `@PostMapping("/path")`    | Maps POST requests.       |
+    | `@PutMapping("/path")`     | Maps PUT requests.        |
+    | `@DeleteMapping("/path")`  | Maps DELETE requests.     |
+    | `@RequestParam`            | Gets request parameters.  |
+    | `@PathVariable`            | Extracts values from URL. |
+    | `@ResponseBody`            | Sends data as JSON.       |
+
+* Controller for view (skipped)
+
+  * `ModelAndView` class
+  * JSP is a servlet in the end
+
+
+### REST API
+
+* **RE**presentational **S**tate **T**ransfer
+
+* [REST API written by Postman](https://blog.postman.com/rest-api-examples/)
+
+* A key difference between a traditional MVC controller and the RESTful web service controller shown earlier is the way that the HTTP response body is created
+
+* Rather than relying on a view technology to perform server-side rendering of the greeting data to HTML, this RESTful web service controller populates and returns an object. The object data will be written directly to the HTTP response as JSON
+
+* `jackson` library converts Java objects to JSON
+
+* ```java
+  @RestController
+  @RequestMapping("/posts")		// Base URL for all endpoints
+  @CrossOrigin(origins = "http://localhost:3000")
+  public class JobController {
+  
+      private JobService service;
+  
+      @Autowired
+      public JobController(JobService service) {
+          this.service = service;
+      }
+  
+      public JobController() {
+      }
+  
+      @GetMapping
+      public List<JobPost> getAllJobs() {
+          return service.getAllJobs();
+      }
+  
+      // You can specify which format you want to produce or consume
+      @GetMapping(path = "/{postId}", produces = {"application/json"})
+    	// @PathVariable indicates that a method parameter should be bound to a URI template variable
+    	// If the path variable name is the same as the parameter name, you don't have to specify it
+      public JobPost getJobById(@PathVariable int postId) {
+          return service.getJobById(postId);
+      }
+  
+      @PostMapping(consumes = {"application/json"})
+      public JobPost addJob(@RequestBody JobPost job) {
+          service.addJob(job);
+          return job;
+      }
+  
+      // @RequestBody read the request body and deserialised it into an Object
+    	@PutMapping("/{postId}")
+      public JobPost updateJob(@RequestBody JobPost job) {
+          service.updateJob(job);
+          return service.getJobById(job.getPostId());
+      }
+  
+      // @RequestParam binds the value of the query String parameter into the method parameter
+    	// If the query parameter is absent in the request, then defaultValue is used
+    	// Type conversion is automatically applied if the target method parameter type is not String
+    	// If the conversion is falied, then respond bad request
+    	@DeleteMapping
+      public void deleteJob(@RequestParam(name = "id", defaultValue = "1") int jobId) {
+          service.deleteJob(jobId);
+      }
+  }
+  ```
+
+* 
+
+
+***
+
 ## Spring JDBC
 
 * Spring JDBC is a lightweight module in the Spring Framework that simplifies database interaction using JDBC
@@ -545,199 +752,27 @@
 
 ***
 
-## Spring Boot Web
-
-### Servlet (Old way)
-
-* A Servlet is a Java-based server-side class used to handle requests and generate dynamic responses for web applications
-
-* The servlet must be run on the servlet container (e.g., Apache Tomcat) instead of directly on JVM
-
-* External or embedded server
-
-* Servlet lifecycle
-
-  * Loading and initialisation
-    * When a servlet is requested for the first time or after a container restart, the servlet container loads the servlet class into memory
-    * The container calls the `init()` method, which is used to initialize the servlet
-    * `init()` is called only once during the servlet’s lifecycle and is used to perform any initializations required for the servle
-  * Request handling
-    * `service()` method is called for each request made to the servlet
-    * It is responsible for processing the client request and generating the response
-    * The container calls `service()` whenever it receives an HTTP request (usually via `doGet()`, `doPost()`, etc.)
-    * In the case of `HttpServlet`, the `service()` method delegates the request to specific methods based on the HTTP method (GET, POST, etc.):
-      - **`doGet()`**: Handles HTTP GET requests (commonly used for retrieving data from the server).
-      - **`doPost()`**: Handles HTTP POST requests (commonly used for submitting data to the server).
-      - **`doPut()`, `doDelete()`**: Handle PUT and DELETE requests, respectively.
-      - **`doHead()`, `doOptions()`**: Handle other HTTP request types like HEAD and OPTIONS.
-  * Destroying the servlet
-    * When the servlet container decides to unload the servlet (typically when the server shuts down or the servlet is no longer needed), it calls the `destroy()` method
-    * his is where cleanup tasks such as releasing resources (like database connections or file handles) should be done
-
-* How to create a servlet?
-
-  1. Extend `HttpServlet`
-  2. Override `doGet()`, `doPOst()`, etc.
-  3. Configure using `web.xml` or `WebServlet` annotation
-
-* ```java
-  import java.io.IOException;
-  import javax.servlet.ServletException;
-  import javax.servlet.annotation.WebServlet;
-  import javax.servlet.http.HttpServlet;
-  import javax.servlet.http.HttpServletRequest;
-  import javax.servlet.http.HttpServletResponse;
-  
-  // Annotation-based servlet mapping
-  @WebServlet("/hello")
-  public class HelloServlet extends HttpServlet {
-      
-      @Override
-      public void init() throws ServletException {
-          System.out.println("Servlet Initialized");
-      }
-    
-    	@Override
-      protected void doGet(HttpServletRequest request, HttpServletResponse response) 
-              throws ServletException, IOException {
-          response.setContentType("text/html");
-          response.getWriter().println("<h1>Hello, Servlet!</h1>");
-      }
-    
-    	@Override
-    	protected void doPost(HttpServletRequest request, HttpServletResponse response) 
-        			throws ServletException, IOException {
-          // Handle POST request
-          String data = request.getParameter("data");
-          response.getWriter().write("Received POST data: " + data);
-  		}
-    
-    	@Override
-      public void destroy() {
-          System.out.println("Servlet Destroyed");
-      }
-  }
-  ```
-
-### Spring MVC with Spring Boot
-
-* MVC (Model-View-Controller)
-  * **Controller**
-    * Maps HTTP requests to specific handler methods
-    * Validates input data (optional, but often delegated to validation mechanisms)
-    * Calls the service layer for business logic execution
-    * Returns responses (JSON, XML, View)
-    * Servlet, Spring MVC Controller
-  * **Model**
-    * **`@Service`**
-      * Implements business logic
-      * Calls data access layer (repository/DAO)
-      * Ensures transaction management (e.g., `@Transactional`)
-      * Provides reusable methods for controllers
-    * **`@Component`**
-      * Representing and managing application data
-    * **`@Repository`**
-      * Interacting with the database
-      * Spring JDBC, Hibernate, Spring Data JPA, etc.
-  * **View**
-    * Displays data received from the Controller
-    * UI presentation
-    * JSP, Thymeleaf, React, Angular, etc.
-
-* Spring Boot MVC has an embedded Tomcat server
-
-* Work flow
-
-  * ```css
-    [Client] → [DispatcherServlet] → [Controller] → [Service] → [DAO] → [Database]
-                  ↓
-          [View Resolver] → [View]
-    ```
-
-* Annotations
-
-  * | Annotation                 | Description               |
-    | -------------------------- | ------------------------- |
-    | `@Controller`              | Defines a web controller. |
-    | `@RestController`          | Handles RESTful APIs.     |
-    | `@RequestMapping("/path")` | Maps request URLs.        |
-    | `@GetMapping("/path")`     | Maps GET requests.        |
-    | `@PostMapping("/path")`    | Maps POST requests.       |
-    | `@PutMapping("/path")`     | Maps PUT requests.        |
-    | `@DeleteMapping("/path")`  | Maps DELETE requests.     |
-    | `@RequestParam`            | Gets request parameters.  |
-    | `@PathVariable`            | Extracts values from URL. |
-    | `@ResponseBody`            | Sends data as JSON.       |
-
-* Controller for view (skipped)
-
-  * `ModelAndView` class
-  * JSP is a servlet in the end
-
-
-### REST API
-
-* **RE**presentational **S**tate **T**ransfer
-
-* [REST API written by Postman](https://blog.postman.com/rest-api-examples/)
-
-* `jackson` library converts Java objects to JSON
-
-* ```java
-  @RestController
-  @RequestMapping("/posts")		// Base URL for all endpoints
-  @CrossOrigin(origins = "http://localhost:3000")
-  public class JobController {
-  
-      private JobService service;
-  
-      @Autowired
-      public JobController(JobService service) {
-          this.service = service;
-      }
-  
-      public JobController() {
-      }
-  
-      @GetMapping
-      public List<JobPost> getAllJobs() {
-          return service.getAllJobs();
-      }
-  
-      // You can specify which format you want to produce or consume
-      @GetMapping(path = "/{postId}", produces = {"application/json"})
-    	// If the path variable name is the same as the parameter name, you don't have to specify it
-      public JobPost getJobById(@PathVariable int postId) {
-          return service.getJobById(postId);
-      }
-  
-      @PostMapping(consumes = {"application/json"})
-      public JobPost addJob(@RequestBody JobPost job) {
-          service.addJob(job);
-          return job;
-      }
-  
-      @PutMapping("/{postId}")
-      public JobPost updateJob(@RequestBody JobPost job) {
-          service.updateJob(job);
-          return service.getJobById(job.getPostId());
-      }
-  
-      @DeleteMapping("/{postId}")
-      public void deleteJob(@PathVariable("postId") int jobId) {
-          service.deleteJob(jobId);
-      }
-  }
-  ```
-
-* 
-
-
-***
-
 ## Spring Data JPA
 
+### JPA
 
+* Java Persistence API
+  * JPA is a Java **specification** that provides an ORM framework to manage data in Java application
+  * The common interface for different providers like Hibernate, ExlipseLink, etc.
+* JPA architecture
+  * ![jpa_architecture](imgs/jpa_architecture.png)
+
+### Spring Data JPA
+
+* Spring Data JPA is built as an abstract layer over the JPA
+* It has all features of JPA plus the Spring ease of development
+* [JPA vs. Spring Data JPA](https://www.baeldung.com/spring-data-jpa-vs-jpa)
+* For years, developers have written boilerplate code to create a JPA DAO for basic functionalities. Spring helps to significantly reduce this amount of code by providing minimal interfaces and actual implementations
+* Spring Data JPA uses Hibernate under the hood
+* How to use Spring Data JPA?
+  1. a
+* Spring Data JPA creates a bunch of `findBy_` methods for you behind the scene when you specify them in the `@Repository` without specifying `@Query`
+* 
 
 
 
