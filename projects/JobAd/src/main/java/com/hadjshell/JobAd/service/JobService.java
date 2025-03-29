@@ -59,6 +59,10 @@ public class JobService {
         return repo.findByPostProfileContaining(keyword);
     }
 
+    public List<JobPost> searchJobRequiredAtLeastExperience(int year) {
+        return repo.findByReqExperienceGreaterOrEqualThan(year);
+    }
+
     public void updateJob(JobPost job) {
         repo.save(job);
     }

@@ -38,7 +38,12 @@ public class JobController {
         return service.search(keyword);
     }
 
-    @PostMapping(consumes = {"application/json"})
+    @GetMapping(params = "year")
+    public List<JobPost> searchJobWithAtLeastExperience(@RequestParam(name = "year") int year) {
+        return service.searchJobRequiredAtLeastExperience(year);
+    }
+
+    @PostMapping
     public JobPost addJob(@RequestBody JobPost job) {
         service.addJob(job);
         return job;

@@ -17,30 +17,36 @@ const Edit = () => {
   const [form, setForm] = useState(initial);
   const [currId] = useState(location.state.id);
 
-
   useEffect(() => {
-    const fetchInitialPosts = async (id) => {  
-      const response = await axios.get(`http://localhost:8080/jobPost/${id}`);
+    const fetchInitialPosts = async id => {
+      const response = await axios.get(`http://localhost:8080/posts/${id}`);
       console.log(response.data);
       setForm(response.data);
     };
     fetchInitialPosts(currId);
   }, [currId]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e, id) => {
     e.preventDefault();
-    axios     
-      .post("http://localhost:8080/jobPost",form)
-      .then((resp) => {
+    axios
+      .put(`http://localhost:8080/posts/${id}`, form, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(resp => {
         console.log(resp.data);
       })
-      .catch((error) => {
+      .catch(error => {
         console.log(error);
       });
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, postTechStack: [...form.postTechStack, e.target.value] });
+  const handleChange = e => {
+    setForm({
+      ...form,
+      postTechStack: [...form.postTechStack, e.target.value],
+    });
   };
 
   const skillSet = [
@@ -66,7 +72,7 @@ const Edit = () => {
       <Typography sx={{ margin: "3% auto" }} align="center" variant="h5">
         Edit New Post
       </Typography>
-      <form autoComplete="off" noValidate onSubmit={handleSubmit}>
+      <form autoComplete="off" noValidate>
         <Box
           sx={{
             display: "flex",
@@ -78,7 +84,7 @@ const Edit = () => {
             min="0"
             type="number"
             sx={{ width: "50%", margin: "2% auto" }}
-            onChange={(e) => setForm({ ...form, postId: e.target.value })}
+            onChange={e => setForm({ ...form, postId: e.target.value })}
             label="Enter your Post ID"
             variant="outlined"
             value={form.postId}
@@ -87,7 +93,7 @@ const Edit = () => {
             type="string"
             sx={{ width: "50%", margin: "2% auto" }}
             required
-            onChange={(e) => setForm({ ...form, postProfile: e.target.value })}
+            onChange={e => setForm({ ...form, postProfile: e.target.value })}
             label="Job-Profile"
             variant="outlined"
             value={form.postProfile}
@@ -97,9 +103,7 @@ const Edit = () => {
             type="number"
             sx={{ width: "50%", margin: "2% auto" }}
             required
-            onChange={(e) =>
-              setForm({ ...form, reqExperience: e.target.value })
-            }
+            onChange={e => setForm({ ...form, reqExperience: e.target.value })}
             label="Years of Experience"
             variant="outlined"
             value={form.reqExperience}
@@ -110,7 +114,7 @@ const Edit = () => {
             required
             multiline
             rows={4}
-            onChange={(e) => setForm({ ...form, postDesc: e.target.value })}
+            onChange={e => setForm({ ...form, postDesc: e.target.value })}
             label="Job-desc"
             variant="outlined"
             value={form.postDesc}
@@ -143,8 +147,8 @@ const Edit = () => {
           <Button
             sx={{ width: "50%", margin: "2% auto" }}
             variant="contained"
-            type="submit"
-            onClick={() => navigate("/")}
+            type="button"
+            onClick={e => handleSubmit(e, form.postId)}
           >
             Submit
           </Button>
