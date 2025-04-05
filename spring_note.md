@@ -91,7 +91,7 @@
 
 ### Spring Beans
 
-* A Spring Bean is simply a Java object created and managed by Spring IoC container
+* A Spring Bean is simply **a Java object** created and managed by **Spring IoC container**
 
 * Why do we need Beans?
 
@@ -582,8 +582,10 @@
       @GetMapping(path = "/{postId}", produces = {"application/json"})
     	// @PathVariable indicates that a method parameter should be bound to a URI template variable
     	// If the path variable name is the same as the parameter name, you don't have to specify it
-      public JobPost getJobById(@PathVariable int postId) {
-          return service.getJobById(postId);
+      public ResponseEntity<JobPost> getJobById(@PathVariable int postId) {
+          JobPost job = service.getJobById(postId);
+        	return job != null ? new ResponseEntity<JobPost>(job, HttpStatus.OK) :
+                                  new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
     
     	// If @GetMapping is differentiated by @RequestParam only, then add params element specifying which query parameters are gonna be received 
@@ -615,8 +617,6 @@
       }
   }
   ```
-  
-* 
 
 
 ***
@@ -865,8 +865,33 @@
      * `findById` returns an [`Optional`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html) object
   
   4. Build service layer and controller layer
-  
-* 
+
+***
+
+## Spring AOP
+
+### AOP
+
+* Aspect Oriented Programming 
+* Crosscutting concerns
+
+***
+
+## Spring Security
+
+***
+
+## Docker
+
+***
+
+## Cloud Deployment
+
+***
+
+## Microservices
+
+
 
 
 
