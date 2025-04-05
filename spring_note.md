@@ -870,10 +870,46 @@
 
 ## Spring AOP
 
-### AOP
+### AOP Concepts
 
-* Aspect Oriented Programming 
-* Crosscutting concerns
+* Aspect Oriented Programming
+* AOP **complements** OOP by providing another way of thinking about program structure
+* The key unit of modularity in OOP is the class, whereas in AOP the unit of modularity is the aspect
+* Spring IoC container does not depend on AOP (meaning you do not need to use AOP if you don't want to)
+* The problem trying to solve - **Crosscutting concerns**
+  * Service layer can be lengthy due to extra functionalities such as logging, security, validation, etc. without fully focusing on business logic
+  * **Separate** those functionalities from business logic into other classes, framework decides when and where to call them automatically
+
+* Terminologies
+  * **Aspect (Where-Conceptual)**: A modularization of a concern that cuts across multiple classes
+  * **Joint point (When)**: A point during the execution of a program, such as the excution of a method or the handling of an exception
+  * **Advice (What)**: logics taken by an aspect at a particular joint point
+  * **Pointcut (Where-Operational)**: Advice is associated with a pointcut expression and runs at any joint point matched by the pointcut
+    * Spring uses the **AspectJ** pointcut expression language by default
+
+  * **Target object (Whom)**: An object being advised by one or more aspects
+    * Since Spring AOP is implemented by using runtime proxies, this object is always a proxied object
+
+  * **Proxy**: An object created by the AOP framework in order to implement the aspect contracts (advice method executions and so on)
+  * **Weaving (How)**: Linking aspects with other application types or objects to create a proxy
+    * Spring AOP performs weaving at runtime
+
+  * **Type of Advice**
+    * **Before**: Advice that runs before a join point but that does not have the ability to prevent execution flow proceeding to the join point (unless it throws an exception)
+    * **After returning **: Advice to be run after a join point completes normally
+    * **After throwing**: Advice to be run if a method exits by throwing an exception
+    * **After (finally)**: Advice to be run regardless of the means by which a join point exits (normal or exceptional return)
+    * **Around**: Advice that surrounds a join point such as a method invocation
+      * Around advice can perform custom behavior before and after the method invocation
+      * It is also responsible for choosing whether to proceed to the join point or to shortcut the advised method execution by returning its own return value or throwing an exception
+
+
+### How to use AOP
+
+1. Enabling `@ASpectJ` support
+2. Declaring an Aspect
+3. Declaring a Pointcut
+4. Decalring Advice
 
 ***
 
@@ -890,6 +926,13 @@
 ***
 
 ## Microservices
+
+***
+
+## Resources
+
+* [Spring Docs](https://docs.spring.io/spring-framework/reference/overview.html)
+* 
 
 
 
