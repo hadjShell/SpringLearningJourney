@@ -13,14 +13,16 @@ public class LoggingAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingAspect.class);
 
     // return-type, class-name.method-name(args)
-    @Before("execution(* com.hadjshell.ecom.controller.ProductController.*(..))")
+    @Before("within(com.hadjshell.ecom.controller..*) && execution(* com.hadjshell.ecom.controller.ProductController.*(..))")
     public void logMethodCall(JoinPoint jp) {
         LOGGER.info("Method called: " + jp.getSignature().getName());
     }
 
-    @AfterReturning("execution(* com.hadjshell.ecom.controller.ProductController.*(..))")
-    public void logMethodExecution(JoinPoint jp) {
+    @AfterReturning(pointcut = "execution(* com.hadjshell.ecom.controller.ProductController.*(..))",
+                    returning = "result")
+    public void logMethodExecution(JoinPoint jp, Object result) {
         LOGGER.info("Method executed successfully: " + jp.getSignature().getName());
+        LOGGER.info(result.toString());
     }
 
     @AfterThrowing("execution(* com.hadjshell.ecom.controller.ProductController.*(..))")
