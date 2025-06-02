@@ -32,7 +32,7 @@
   * `src/main/java`
     * Java source code
   * `src/main/resources`
-    * Properties / config files used by your app
+    * Properties and **config** files used by your app
   * `src/main/webapp`
     * JSP files and web config files, other web assets
     * DON'T use this directory if your package is packed as a JAR
@@ -46,13 +46,18 @@
 * `pom.xml`
 
   * **P**roject **O**bject **M**odel file
+
   * File structure
     * Project metadata
       * Project name, version, output file type, etc.
+      
     * Dependencies
+    
+      > **Dependencies are Maven artifacts/components required for the project**
+    
     * Plugins
-      * Additional custom tasks to run
-
+      > **Plugins perform tasks for a Maven build. These are not packaged in the application**
+    
   * Project coordinates
 
     * Uniquely identify a project
@@ -66,11 +71,15 @@
             <artifactId>hibernate-core</artifactId>		
             <version>6.1.4.Final</version>	
           </dependency>
-        </dependencies>
+       </dependencies>
       ```
 
 * Maven archetype
   * Prototype `pom.xml`
+
+* <img src="imgs/Maven-Commands-Cheat-Sheet.png" alt="Maven-Commands-Cheat-Sheet" style="zoom: 67%;" />
+
+* `maven spring-boot:run`
 
 ***
 
@@ -80,10 +89,10 @@
   * | Feature           | Spring Framework | Spring Boot |
   |------------------|----------------|------------|
   | **Definition** | A comprehensive framework for Java enterprise applications. | A framework built on top of Spring that simplifies application setup and development. |
-  | **Configuration** | Requires a lot of manual XML or Java-based configuration. | Comes with auto-configuration to reduce boilerplate code. |
-  | **Standalone Applications** | Needs an external server (e.g., Tomcat, Jetty) for deployment. | Embedded servers (Tomcat, Jetty, Undertow) allow applications to run standalone. |
+  | **Configuration** | Requires a lot of **manual** XML or Java-based configuration. | Comes with **auto-configuration** to reduce boilerplate code. |
+  | **Standalone Applications** | Needs an **external server** (e.g., Tomcat, Jetty) for deployment. | **Embedded servers** (Tomcat, Jetty, Undertow) allow applications to run standalone. |
   | **Dependency Management** | Requires developers to manually manage dependencies. | Provides "starters" (e.g., `spring-boot-starter-web`) to simplify dependency management. |
-  | **Complexity** | More flexible but requires more setup and understanding of components. | Opinionated defaults make development faster and easier. |
+  | **Complexity** | More flexible but requires more setup and understanding of components. | **Opinionated defaults** make development faster and easier. |
   | **Microservices** | Can be used for microservices but requires additional configuration. | Designed with microservices in mind, making development smoother. |
   | **Production Readiness** | Requires additional setup for metrics, logging, and monitoring. | Includes built-in support for monitoring, metrics, and externalized configuration. |
 
@@ -100,7 +109,7 @@
 
 * How to create bean
 
-  * XML-based configuration
+  * **XML-based configuration**
 
     * ```xml
       <!--/src/main/resources/spring.xml-->
@@ -115,7 +124,7 @@
       Laptop l2 = context.getBean(Laptop.class);
       ```
 
-  * Java-based configuration
+  * **Java-based configuration**
 
     * ```java
       // src/main/java/com.example/config/AppConfig.java
@@ -139,7 +148,7 @@
       Laptop l = context.getBean(Laptop.class);
       ```
 
-  * Component scanning
+  * **Spring Boot Component Scanning**
 
     * Stereotype annotations
 
@@ -177,10 +186,10 @@
       - `@ComponentScan`: Tells Spring to look for other components, configurations, and services in the `com/example` package, letting it find the controllers
     
 
-* Scope
+* **Scope**
 
   * Singleton
-    * By default beans are singleton scope
+    * By default beans are singleton scope (no matter what type of application is)
   * Prototype
     * A new instance is created everytime it is requested
   * Request 
@@ -221,9 +230,14 @@
 
 ### Inversion of Control
 
+* Inversion of Control (IoC) is **a design principle in which a software component is designed to receive its dependencies from an external source, rather than creating them itself**. This is in contrast to traditional software design, where a component is responsible for creating and managing its own dependencies
 * Focusing on business logic instead of managing objects (creating, maintaining, destroying) as a programmer
-* Spring IoC container takes care of it
-* It is a Spring principle
+
+### Container
+
+* The `org.springframework.context.ApplicationContext` interface represents the Spring IoC container and is responsible for instantiating, configuring, and assembling the beans
+* The container gets its instructions on the components to instantiate, configure, and assemble by reading configuration metadata
+* ![ioc_container](imgs/ioc_container.png)
 
 ### Dependency Injection
 
@@ -231,7 +245,7 @@
 
 #### Construction Injection
 
-* It is the recommended approach for injecting **mandatory dependencies** because it ensures that an object is always created with its required dependencies
+* It is the **recommended approach** for injecting **mandatory dependencies** because it ensures that an object is always created with its required dependencies
 
 * Steps
 
@@ -278,7 +292,9 @@
 
 #### Setter Injection
 
-* It allows Spring to inject beans after object creation
+* Setter injection is accomplished by the container calling setter methods on your beans **after** invoking a no-argument constructor to instantiate your bean
+
+* If the dependencies is not found, the dependent object will be null, so **null check is required**
 
 * Steps
 
@@ -330,6 +346,8 @@
 #### Autowiring
 
 * Autowiring is a mechanism that automatically injects dependencies into Spring Beans, reducing the need for manual bean wiring in configuration files
+
+* Whenever we use `@Autowired`, Spring makes sure the relevant bean **existed** and gets injected for use. If this cannot be done, Spring throws an exception and the application fails to start
 
 * XML-based Config
 
@@ -412,6 +430,8 @@
     }
     ```
 
+* [Inject primitive fields](https://mkyong.com/spring3/spring-value-default-value/)
+
 
 ***
 
@@ -421,28 +441,39 @@
 
 * A Servlet is a Java-based server-side class used to handle requests and generate dynamic responses for web applications
 
-* The servlet must be run on the servlet container (e.g., Apache Tomcat) instead of directly on JVM
+* The servlet must be run on the **servlet container** (e.g., Apache Tomcat) instead of directly on JVM
 
 * External or embedded server
 
 * Servlet lifecycle
 
-  * Loading and initialisation
-    * When a servlet is requested for the first time or after a container restart, the servlet container loads the servlet class into memory
-    * The container calls the `init()` method, which is used to initialize the servlet
-    * `init()` is called only once during the servlet’s lifecycle and is used to perform any initializations required for the servle
-  * Request handling
-    * `service()` method is called for each request made to the servlet
-    * It is responsible for processing the client request and generating the response
-    * The container calls `service()` whenever it receives an HTTP request (usually via `doGet()`, `doPost()`, etc.)
-    * In the case of `HttpServlet`, the `service()` method delegates the request to specific methods based on the HTTP method (GET, POST, etc.):
-      - **`doGet()`**: Handles HTTP GET requests (commonly used for retrieving data from the server).
-      - **`doPost()`**: Handles HTTP POST requests (commonly used for submitting data to the server).
-      - **`doPut()`, `doDelete()`**: Handle PUT and DELETE requests, respectively.
-      - **`doHead()`, `doOptions()`**: Handle other HTTP request types like HEAD and OPTIONS.
-  * Destroying the servlet
-    * When the servlet container decides to unload the servlet (typically when the server shuts down or the servlet is no longer needed), it calls the `destroy()` method
-    * his is where cleanup tasks such as releasing resources (like database connections or file handles) should be done
+  1. **Loading and initialisation**
+
+     * When a servlet is requested for the first time or after a container restart, the servlet container loads the servlet class into memory
+
+     * The container calls the `init()` method, which is used to initialize the servlet
+
+     * `init()` is called only once during the servlet’s lifecycle and is used to perform any initializations required for the servlet
+
+  2. **Request handling**
+
+     * `service()` method is called for each request made to the servlet
+
+     * It is responsible for processing the client request and generating the response
+
+     * The container calls `service()` whenever it receives an HTTP request (usually via `doGet()`, `doPost()`, etc.)
+
+     * In the case of `HttpServlet`, the `service()` method delegates the request to specific methods based on the HTTP method (GET, POST, etc.):
+       - **`doGet()`**: Handles HTTP GET requests (commonly used for retrieving data from the server).
+       - **`doPost()`**: Handles HTTP POST requests (commonly used for submitting data to the server).
+       - **`doPut()`, `doDelete()`**: Handle PUT and DELETE requests, respectively.
+       - **`doHead()`, `doOptions()`**: Handle other HTTP request types like HEAD and OPTIONS.
+
+  3. **Destroying the servlet**
+
+     * When the servlet container decides to unload the servlet (typically when the server shuts down or the servlet is no longer needed), it calls the `destroy()` method
+
+     * This is where cleanup tasks such as releasing resources (like database connections or file handles) should be done
 
 * How to create a servlet?
 
@@ -491,29 +522,27 @@
 
 ### Spring MVC with Spring Boot
 
-* MVC (Model-View-Controller)
+* MVC (**Model-View-Controller**)
+  * **View**
+    * Displays data received from the Controller
+    * **UI presentation**
+    * JSP, Thymeleaf, React, Angular, etc.
   * **Controller**
-    * Maps HTTP requests to specific handler methods
-    * Validates input data (optional, but often delegated to validation mechanisms)
-    * Calls the service layer for business logic execution
-    * Returns responses (JSON, XML, View)
-    * Servlet, Spring MVC Controller
+    * **Maps** HTTP requests to specific handler methods
+    * **Validates** input data (optional, but often delegated to validation mechanisms)
+    * **Calls the service** layer for business logic execution
+    * **Returns responses** (JSON, XML, View)
   * **Model**
     * **`@Service`**
-      * Implements business logic
-      * Calls data access layer (repository/DAO)
+      * Implements **business logic**
+      * **Calls data access layer** (repository/DAO)
       * Ensures transaction management (e.g., `@Transactional`)
-      * Provides reusable methods for controllers
-    * **`@Component`**
-      * Representing and managing application data
     * **`@Repository`**
       * Interacting with the database
       * Spring JDBC, Hibernate, Spring Data JPA, etc.
-  * **View**
-    * Displays data received from the Controller
-    * UI presentation
-    * JSP, Thymeleaf, React, Angular, etc.
-
+    * **`@Component`**
+      * Representing and managing **application data**
+  
 * Spring Boot MVC has an embedded Tomcat server
 
 * Work flow
@@ -524,20 +553,18 @@
           [View Resolver] → [View]
     ```
 
-* Annotations
-
-  * | Annotation                 | Description               |
-    | -------------------------- | ------------------------- |
-    | `@Controller`              | Defines a web controller. |
-    | `@RestController`          | Handles RESTful APIs.     |
-    | `@RequestMapping("/path")` | Maps request URLs.        |
-    | `@GetMapping("/path")`     | Maps GET requests.        |
-    | `@PostMapping("/path")`    | Maps POST requests.       |
-    | `@PutMapping("/path")`     | Maps PUT requests.        |
-    | `@DeleteMapping("/path")`  | Maps DELETE requests.     |
-    | `@RequestParam`            | Gets request parameters.  |
-    | `@PathVariable`            | Extracts values from URL. |
-    | `@ResponseBody`            | Sends data as JSON.       |
+* | Annotation                 | Description              |
+  | -------------------------- | ------------------------ |
+  | `@Controller`              | Defines a web controller |
+  | `@RestController`          | Handles RESTful APIs     |
+  | `@RequestMapping("/path")` | Maps request URLs        |
+  | `@GetMapping("/path")`     | Maps GET requests        |
+  | `@PostMapping("/path")`    | Maps POST requests       |
+  | `@PutMapping("/path")`     | Maps PUT requests        |
+  | `@DeleteMapping("/path")`  | Maps DELETE requests     |
+  | `@RequestParam`            | Gets request parameters  |
+  | `@PathVariable`            | Extracts values from URL |
+  | `@ResponseBody`            | Sends data as JSON       |
 
 * Controller for view (skipped)
 
@@ -549,17 +576,19 @@
 
 * **RE**presentational **S**tate **T**ransfer
 
-* [REST API written by Postman](https://blog.postman.com/rest-api-examples/)
+* [REST API article written by Postman](https://blog.postman.com/rest-api-examples/)
 
-* A key difference between a traditional MVC controller and the RESTful web service controller shown earlier is the way that the HTTP response body is created
+* A key difference between a traditional MVC controller and the RESTful web service controller is the way that the **HTTP response body** is created
 
-* Rather than relying on a view technology to perform server-side rendering of the greeting data to HTML, this RESTful web service controller populates and returns an object. The object data will be written directly to the HTTP response as JSON
+* Rather than relying on a view technology to perform server-side rendering of the greeting data to HTML, this RESTful web service controller populates and returns an object. The object data will be written directly to the HTTP response as **JSON**
 
-* `jackson` library converts Java objects to JSON
+* `jackson` library converts **Java objects to JSON**
+
+* [URI syntax](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#syntax)
 
 * ```java
   @RestController
-  @RequestMapping("/posts")		// Base URL for all endpoints
+  @RequestMapping("/posts")		// Base URI for all endpoints
   @CrossOrigin(origins = "http://localhost:3000")
   public class JobController {
   
@@ -763,7 +792,7 @@
 ### JPA
 
 * Java Persistence API
-  * JPA is a Java **specification** that provides an ORM framework to manage data in Java application
+  * JPA is a Java **specification** that provides an ORM (**Object-Relational-Mapping**) framework to manage data in Java application
   * The common interface for different providers like Hibernate, ExlipseLink, etc.
 * JPA architecture
   * ![jpa_architecture](imgs/jpa_architecture.png)
@@ -778,7 +807,7 @@
 
 * For years, developers have written boilerplate code to create a JPA DAO for basic functionalities. Spring helps to significantly reduce this amount of code by providing minimal interfaces and actual implementations
 
-* Spring Data JPA uses Hibernate under the hood
+* Spring Data JPA uses **Hibernate** under the hood
 
 * How to use Spring Data JPA?
   1. Config database in `application.properties`
@@ -806,7 +835,8 @@
        @Component
        @Scope("prototype")
        @Entity
-       public class JobPost {
+       @Table(name = "jobPost")
+       public class JobPost implements Serializable {
        
            @Id		// primary key
          	// Indicate that ID should be generated automatically
@@ -814,6 +844,7 @@
            private int postId;
            private String postProfile;
            private String postDesc;
+         	@Column(nullable = false)
            private int reqExperience;
            private List<String> postTechStack;
        
@@ -856,7 +887,7 @@
        
        ```
   
-     * Spring Data JPA focuses on using JPA to store data in a relational database
+     * Spring Data JPA uses JPA to store data in a relational database
   
      * It is able to create repository implementations automatically, at runtime, from a repository interface
   
@@ -878,7 +909,7 @@
 * Spring IoC container does not depend on AOP (meaning you do not need to use AOP if you don't want to)
 * The problem trying to solve - **Crosscutting concerns**
   * Service layer can be lengthy due to extra functionalities such as logging, security, validation, etc. instead of fully focusing on business logic
-  * **Separate** those functionalities from business logic into other classes, framework decides when and where to call them automatically
+  * **Separate those functionalities from business logic into other classes**, framework decides when and where to call them automatically
 
 * Terminologies
   * **Aspect (Where-Conceptual)**: A modularization of a concern that cuts across multiple classes
@@ -937,7 +968,7 @@
      
          private static final Logger LOGGER = LoggerFactory.getLogger(LoggingAspect.class);
      
-         // Pointcut expression: pointcut designator(return-type class-name.method-name(args))
+         // Pointcut expression: designator(return-type class-name.method-name(args))
        	// Pointcut expressions can be combined by using && || !
        	// Pointcut expression may be either an inline pointcut or a reference to a named pointcut
          @Before("within(com.hadjshell.ecom.controller..*) && execution(* com.hadjshell.ecom.controller.ProductController.*(..))")
